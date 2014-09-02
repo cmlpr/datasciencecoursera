@@ -223,13 +223,86 @@ m
 
 ####### SUBSETTING #######
 
+# []     # always returns an object of the same class as the original
+# [[]]   # ectract elements of a list or a data frame, the class of the extracted object will not necessarily be a list or data frame
+# $      # used to extract elements of a list or data frame by name
+
+x <- c("a", "b", "c", "d", "a", "b")  #character vector
+x[1]           # first element, character vector with 1 element
+x[3]      
+x[2:3]         #sequence of elements
+x[x>"b"]       # can use logical indices
+y <- x > "b"   # assign T, F to another vector. Y is a logical vector
+y              # print y
+x[y]           # get subset of x using y
+
+#subsetting matrices
+# use (i,j)
+x <- matrix(1:6, 2, 3)
+x
+x[1,2] # extract element in the first row and second column
+x[2,1] # extract element that is located at the intersection of second row and 1st column
+x[1,]  # get all the elements in the first row
+x[,2]  # get all the elements in the second column
+
+# The result of a matrix subset operation is a vector. 
+# drop = False will preserve the type and result in a matrix
+# by default drop is assigned True
+x[1, 2, drop = FALSE] # will subset the first row and second column element in a matrix form
+
+x[1,]
+x[1, , drop = FALSE]
 
 
+# Subseting a list
+
+x <- list(foo = 1:4, bar = 0.6) # 2 element list
+x            #print the list
+x[1]         #get the first element in the list form using single bracket(preserve the class)
+x[[1]]       #get the first element in a simple sequence form 
+x$bar        #you can use the name of the element
+x[["bar"]]   #double bracket to get the simple sequence
+x["bar"]     #single bracket to get the first element as a list
+
+x <- list(foo = 1:4, bar = 0.6, baz = "hello") # 2 element list
+x
+x[c(1,3)] #if you'd like to get more than 1 element of the list, you can only use single bracket
+          #result will be another list
 
 
+[[]] operator is useful
+name <- "foo"
+x[[name]] # you can use variables to subset a list by using [[]]
+x$name    # you cannot use variables to subset a list by using $ operator
+x$foor    # if you want to use $ operator, you need to use the actual name of the elemnt
 
+x <- list(a = list(10,12,14), b = c(3.14, 2.81))
+x             
+x[[c(1,3)]]   #to get 14
+x[[1]][[3]]   #similar result
+x[[c(2,2)]]
 
+# Partial Matching
+#useful when you are working using command window
+x <- list(aardvark = 1:5)
+x$a         #partial match
+x[["a"]]    #doesn't work this way
+x[["a", exact = FALSE]]  #use exact argument to hget partial match
 
+# Removing NA Values
+x <- c(1, 2, NA, 4, NA, 5)
+#create a logical vector which tells wehre the missing values are
+bad <- is.na(x) #logical vector with T and F values
+x[!bad]         #use ! operator to get the non missing values
 
+#complete cases
+y <- c("a", "b", NA, "d", NA, "f") 
+good <- complete.cases(x,y) #to find the intersection of good data in 2 vectors
+good
+x[good] 
+y[good]
 
+airquality[1:6,] #there are six columns in this data frame
+good <- complete.cases(airquality) #which rows are complete
+airquality[good,][1:6,]            #print the first 6 complete rows
 
