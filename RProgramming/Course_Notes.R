@@ -422,5 +422,6 @@ close(con)
 #interactive way of learning R
 #similar to datacamp
 http://swirlstats.com
+install.packages('swirl')
 
 ####### CONTROL STRUCTURES #######
