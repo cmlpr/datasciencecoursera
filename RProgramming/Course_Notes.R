@@ -407,7 +407,7 @@ data <- read.csv("foo.txt")
 
 #connection is useful when you want to read file partially
 
-con <- gxfile("words.gz")
+con <- gzfile("words.gz")
 x <- readLines(con, 10)
 x
 writeLines # takes a char vector and wirtes each element one line at a time to a text file
