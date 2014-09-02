@@ -306,3 +306,121 @@ airquality[1:6,] #there are six columns in this data frame
 good <- complete.cases(airquality) #which rows are complete
 airquality[good,][1:6,]            #print the first 6 complete rows
 
+
+####### READING/WRITING DATA #######
+
+#reading
+read.table, read.csv  #reading tabular data
+readLines             #reading lines of text data
+source                #reading in R code files (inverse is dump)
+dget                  #reading in R code files (inverse is dput)
+load                  #reading in saved workspace
+unserialize           #reading single R objects in binary form
+
+#writing
+write.table
+writeLines
+dump
+dput
+save
+serialize
+
+#most commly used is the read.table
+#read.table arguments
+ #file              #file name
+ #header            #logical indicating if the file has a header line, default is FALSE
+ #sep               #a string indicating how the columns are separated, default separator is space
+ #colClasses        #a character vector for the class of each column in the dataset
+ #nrows             #the number of rows in the dataset
+ #comment.char      #a char string indicating the comment character, default is "#"
+ #skip              #the number of lines to skip from the beginning
+ #stringsAsFactors  #should character character variables be coded as factors? (default is TRUE)
+
+#read.csv           #default separator is ",", header is always TRUE
+
+# To speed up data reading
+# Make a rough calc of the memory required to store dataset
+  #1.5MM rows, 120 columns, numeric data
+  # 8bytes per numeric object
+  # 1.5E6*120*8bytes/(2^20bytes/MB) = 1.34 GB
+  # Rule of thumb is reading the data will take 2 times the memory calculation
+# define the type of variable in each column
+  # use colClasses argument
+  # quick way of efficiently assigning column classes
+  initial <- read.table("xxx.txt", nrows = 100)
+  classes <- sapply(initial, class)
+  tabAll <- read.table("xxx.txt", colClasses = classes)
+# idenfiy the number of rows and use nrows
+  #if the data is large, you can read it in chunks
+  #Unix tool "wc" helps to read number of lines in a file
+# Set comment.char = "" if there are no commentted lines in your file
+
+#dump, dput
+  #useful becuase the resulting text format is editable, and in the case of corruption
+  #potentially recoverable
+  #preserve the metadata
+  #works better with subversion and git
+  #longer-lived 
+  #requires more space, needs compression
+
+#dput, dget
+#can be used for one object only
+y <- data.frame(a = 1, b = "a")
+dput(y)               #writes the object to the console
+dput(y, file = "y.R") #writes the object to a file in your current working dir
+new.y = dget("y.R")   #gets and constructs the object 
+new.y
+
+#dump, source
+#can handle multiple objects
+x <- "foo"
+y <- data.frame(a = 1, b = "a")
+dump(c('x','y'), file = 'data.R')
+rm(x,y)  #remove objects from workspace 
+source("data.R") #source them back from the file
+y
+x
+
+#Reading data from outside
+
+file    #opens a connection to a file
+gzfile  #opens a connection to a file compressed with gzip
+bzfile  #opens a connection to a file compressed with bzip2
+url     #opens a connection to a webpage
+
+#file
+str(file)
+  #description - name of the file
+  #open 
+     # r : read only
+     # w : initialize and write
+     # a : append to a file
+     # rb, wb, ab : read, write, append in binary mode for Windows
+
+con <- file("foo.txt", "r")
+data <- read.csv(con)
+close(con)
+
+#is the same as
+
+data <- read.csv("foo.txt")
+
+#connection is useful when you want to read file partially
+
+con <- gxfile("words.gz")
+x <- readLines(con, 10)
+x
+writeLines # takes a char vector and wirtes each element one line at a time to a text file
+
+#readlines to read elements from a webpage
+con <- url("http://www.jhsph.edu","r")
+x <-readLines(con)
+head(x)
+close(con)
+
+####### SWIRL #######
+#interactive way of learning R
+#similar to datacamp
+http://swirlstats.com
+
+####### CONTROL STRUCTURES #######
