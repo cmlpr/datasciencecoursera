@@ -48,6 +48,11 @@ dir() # See if the R file in the working directory
 source("xxx.R")
 ls() #To see the functions in the workspace
 
+####### HELP #######
+
+?c      #to get help about c() function
+?`:`    #to get help for operators use back tick
+
 ####### DATA TYPES IN R #######
 
 # 5 basic classes of objects
@@ -422,6 +427,30 @@ close(con)
 #interactive way of learning R
 #similar to datacamp
 http://swirlstats.com
-install.packages('swirl')
+install.packages('swirl') #install the swirl package
+library(swirl)            #load package
+ls()                      #see the variables in the workspace
+rm(list = ls())           #delete variables from workspace
+swirl()                   #start swirl
+
+####### SEQUENCE OF NUMBERS #######
+
+1:20      #simplest way to create a sequence
+pi:10     #real number sequence
+15:1      #can go backward
+
+#seq() function
+seq(1, 20)                 #similar to 1:20
+seq(1, 20, by = 0.5)       #increment
+my_seq <- seq(0, 10, length = 30)    #number of elements
+length(my_seq)                       #size of sequence
+1:length(my_seq)                     #create another sequence 
+seq(along = my_seq)                  #create a sequence along a vector
+seq_along(my_seq)                    #create a sequence along a vector
+
+#rep() function
+rep(0,times = 40)                    #repeat 0 forthy times and request for mod
+rep(c(1,2,3), times = 10)            #replicate the vector 10 times
+rep(c(0,1,2), each = 10)             #replociate each element 10 times
 
 ####### CONTROL STRUCTURES #######
