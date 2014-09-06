@@ -824,7 +824,7 @@ get("y", environment(g))
     # in which the function was defined. In this case the global environment: y = 10
 # Dynamic scoping: the value of y is looked up in the envrionment from which the
     # the function was called
-    # in R the valling environment is known as the parent frame
+    # in R the calling environment is known as the parent frame
     # so the value of y would be 2
 
 
