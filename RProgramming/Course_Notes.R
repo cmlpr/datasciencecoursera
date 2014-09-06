@@ -774,16 +774,139 @@ f <- function (x, y) {
         # we his the empty environment. If the value for a given symbol cannot be found
         # once the empty environment is arrived at, then an error is thrown
 
+# Why is lexical scoping is important?
+    # Typically, a function is defined in the global environment, so that the values
+        #of free variables are just found in the user's workspace
+    # This behaviour is logical for most people and is usually the right thing to do
+    # However, in R you can have functions defined inside other functions
+        # Languages like C don't let you do that
+    # Now things get interesting - In this case the environment in which the function
+        # is defined is the body of another function
+
+make.power <- function(n) {
+    pow <- function(x) {
+        x ^ n
+    }
+    pow # make.power returns the pow function
+}
+
+cube <- make.power(3) # make.power returns the pow function, so cube is assigned to pow
+square <- make.power(2)
+cube(5)
+square(6)
+
+# What is in  function's environment?
+ls(environment(cube))
+get("n", environment(cube))
+
+ls(environment(square))
+get("n", environment(square))
+get("pow", environment(cube))
+
+# Lexical vs. Dynamic Scoping
+y <- 10
+f <- function(x) {
+    y <- 2
+    y ^ 2 + g(x)
+}
+g <- function(x) {
+    x * y
+}
+
+f(3)
+
+ls(environment(f))
+get("y", environment(f))
+ls(environment(g))
+get("y", environment(g))
+
+# Lexical scoping: the value of y in the function g is looked up in the environment
+    # in which the function was defined. In this case the global environment: y = 10
+# Dynamic scoping: the value of y is looked up in the envrionment from which the
+    # the function was called
+    # in R the valling environment is known as the parent frame
+    # so the value of y would be 2
+
+
+# Consequences of Lexical Scoping
+    # In R, all objects must be stored in the memory
+    # All function must carry a pointer to their respective defining envrionment
+    # in S-PLUS, free-variables are always looked up in the workspace
+        #so everthing can be stored on the disk
 
 
 
+####### VECTORIZED OPERATIONS #######
+
+x <- 1:4; y <- 6:9
+
+x + y 
+x > 2 
+x >= 2
+y == 8
+x * y
+x / y
+
+x <- matrix(1:4, 2, 2); y <- matrix(rep(10,4), 2, 2)
+x * y     # Element-wise multiplication
+x / y     
+x %*% y   # True matrix multiplication
 
 
 
+####### DATES and TIMES #######
 
+# Dates are represented by Date class
+# Times are represented by the POSIXct or the POSIXlt class
+# Dates are stored internally as the number of days since 1970-01-01
+# Time are stored internally as the number of seconds since 1970-01-01
 
+x <- as.Date("1970-01-01")
+x
+unclass(x)
+unclass(as.Date("1970-01-02"))
+unclass(as.Date("2014-09-06"))
 
+# POSIXct is just very large integer under the hood; it use a useful class
+    #when you want to store times in something like a data frame
+# POSIXlt is a list underneath and it stores a bunch of other useful information
+    #like the day of the week, day of the year, month, day of the month
 
+# There are generic functios that work on dates and times
+    weekdays # give the day of the week
+    months   # give the month name
+    quarters # give the quater number
+
+x <- Sys.time()
+x #already in POSIXct format
+x$sec #not defined
+p <- as.POSIXlt(x)
+p
+names(unclass(p))
+p$sec
+p$gmtoff
+
+# STRPTIME function
+
+datestring <- c("January 10, 2012 10:40", "December 9, 2011 9:10")
+x <- strptime(datestring, "%B %d, %Y %H:%M")
+x
+class(x)
+
+x <- as.Date("2012-01-01")
+y <- strptime("9 Jan 2011 11:34:21", "%d %b %Y %H:%M:%S")
+y
+x - y
+x <- as.POSIXlt(x)
+x-y
+
+# Keeps track of leap years, leap seconds, daylight savings, and time zones
+
+x <- as.Date("2012-03-01"); y <- as.Date("2012-02-28")
+x-y
+x <- as.POSIXct("2012-10-25 01:00:00")
+y <- as.POSIXct("2012-10-25 06:00:00", tz = "GMT")
+y-x
 
 
 
