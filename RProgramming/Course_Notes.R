@@ -447,10 +447,349 @@ length(my_seq)                       #size of sequence
 1:length(my_seq)                     #create another sequence 
 seq(along = my_seq)                  #create a sequence along a vector
 seq_along(my_seq)                    #create a sequence along a vector
+seq_len(4)
 
 #rep() function
 rep(0,times = 40)                    #repeat 0 forthy times and request for mod
 rep(c(1,2,3), times = 10)            #replicate the vector 10 times
 rep(c(0,1,2), each = 10)             #replociate each element 10 times
 
+
+
+
+
 ####### CONTROL STRUCTURES #######
+
+#allow you to control the flow of the R program
+#mostly not used during an interactive session, but rather when writing a function
+
+#if, else    # testing condition
+#for         # execute a loop a fixed number of times
+#while       # execute a loo while a condition is true
+#repeat      # execute an infinite loop
+#break       # break the execution of a loop
+#next        # skip an interation of a loop
+#return      # exit a function
+
+## IF - ELSE
+
+# structure
+if (<condition>) {
+  ## do sth
+} else if (<condition>) {
+  ## do sth different
+} else {
+  ## do sth different
+}
+
+# method 1
+if (x > 3) {
+  y <- 10
+} else {
+  y <- 0
+}
+
+# method 2
+y <- if (x > 3) {
+  10
+} else {
+  0
+}
+
+## FOR LOOP
+
+# structure
+for (i in 1:10) {
+  print(i)
+}
+
+#equivalent looping 
+x <- c("a", "b", "c","d")
+# example 1
+for(i in 1:4) {
+  print(x[i])
+}
+# example 2
+for(i in seq_along(x)) {
+  print(x[i])
+}
+# example 3
+for(letter in x) {
+  print(letter)
+}
+# example 4
+for(i in 1:4) print(x[i])
+
+# Nesting Loops
+
+x <- matrix(1:6, 2, 3)
+x
+for (i in seq_len(nrow(x))) {
+  for (j in seq_len(ncol(x))) {
+    print(x[i,j])
+  }
+}
+
+## WHILE LOOP
+
+# structure
+count <- 0
+while(count < 10) {
+  print(count)
+  count <- count + 1
+}
+
+# harder to predict when the loop will finish compared to for loop
+z <- 5
+while(z >= 3 && z <= 10) {
+  print(z)
+  coin <- rbinom(1, 1, 0.5)
+  
+  if(coin == 1) { ##random walk
+    z <- z + 1
+  } else {
+    z <- z - 1
+  }
+}
+
+### REPEAT - infinite loop
+
+# the only way to exit a repeat loop is to call break
+
+x0 <- 1
+x1 <- 1e-8 # tolerance
+
+repeat {
+  
+  x1 <- computeEstimate() # imaginary function that computes an estimate
+  
+  if(abs(x1 - x0) < tol) {
+    break
+  } else {
+    x0 <- x1
+  }
+  
+}
+
+## NEXT and RETURN
+
+# next is used to skip an iteration of a loop
+
+for (i in 1:100) {
+  if (i <= 20) {
+    next 
+  }
+  print(i)
+}
+
+# return signals that a function should exit and return a value
+
+
+
+
+
+####### FUNCTIONS #######
+
+f <- function(<argument>) {
+  ## do somethings
+}
+
+# functions are first class objects
+# functions can be passes as arguments to other functions
+# functions can be nested
+
+## Function arguments
+
+# functions have named arguments which potentially have default values
+# The "formal arguments" are the arguments included in the function definition
+# The "formals" function returns a list of all the fornmal arguments of a function
+# Not every function call in R makes use of all the formal arguments
+# Function arguments can be missing or might have default values
+
+## Argument matching
+
+# arguments can be matched positionally or by names
+
+#following calls are equivalent
+mydata <- rnorm(100)
+sd(mydata)
+sd(x = mydata)
+sd(x = mydata, na.rm = FALSE)
+sd(na.rm = FALSE, x = mydata)
+sd(na.rm = FALSE, mydata)
+
+# when an argument is matched by name, it is "taken out" of the argument list and the remaining
+ # unnamed arguments are matched in the order that the are listed in the function
+
+args(lm)
+
+#following calls are equivalent
+
+lm(data = mydata, y ~ x, model = FALSE, 1:100)
+lm(y ~ x, mydata, 1:100, model = FALSE)
+
+# Order of operations when given an argument is
+# 1. Check for exact match for a named argument
+# 2. Check for a partial match
+# 3. Check for a positional match
+
+# Defining a function
+
+f <- function(a, b = 1, c = 2, d = NULL) {
+ print(a)
+ print(b)
+ print(c)
+ print(d)
+}
+f(1)
+f(1,3)
+f(2,333, 666, "a")
+
+# The "..." Argument
+
+# The ... argument indicates a variable number of arguments that are usually passed on
+ # the other functions
+
+# ... is used when extending another function and you don't want to copy the entire argument list
+ # of the orginal function
+
+myplot <- function(x, y, type = "l", ...) {
+  plot(x,y, type = type, ...)
+}
+
+# Generic functions use ...
+mean
+
+# The ... argument is also necessary when the number of arguments passed to the function 
+ # cannot be know in advance
+
+args(paste)
+args(cat)
+
+# arguments that appear after ... on the argument list must be named explicitly and cannot be
+# partially matched
+
+args(paste)
+paste("a", "b", sep = ":")
+paste("a", "b", s = ":")
+
+### EXAMPLE FUNCTIONS
+
+add2 <- function(x,y) {
+  x + y
+}
+add2(1,3)
+
+above10 <- function(x) {
+  use <- x >10
+  x[use]
+}
+above10(1:100)
+
+above <- function(x, n = 10) {
+  use <- x > n
+  x[use]
+}
+above(1:20)
+above(1:20, 5)
+
+columnmean <- function(y, removeNA = TRUE) {
+  nc <- ncol(y)
+  means <- numeric(nc)
+  for(i in 1:nc) {
+    means[i] <- mean(y[,i], na.rm = removeNA)
+  }
+  means
+}
+columnmean(airquality)
+
+
+####### CODING STANDARDS #######
+
+# 1. Use text editor
+# 2. Indent your code
+# 3. Limit the width of your code to ~80
+# 4. Limit the length of your functions
+
+
+####### SCOPING RULES #######
+
+#How does R know which value to assign to which symbol? 
+
+# there is a default function lm - linear modeling- in R
+# if we create a new function called lm
+lm<- function(x) { x * x }
+lm
+# how does R know what values to assign to the symbol lm?
+
+#There are ENVIRONEMNTS - lists of symbols, objects and values
+
+# 1. Search the global environemnt for a symbol 
+# 2. Searc the namespaces of each of the packages on the search list
+
+search()
+
+# The global environment or the user's workspace is always the first element 
+ # of the search list
+# Base package is always the last element of the search list
+# The order of packages on the search list matters
+# User can configure which packages get loaded on startup
+# When a user loads a package with library, the namespace of that package gets
+  # put in position 2 of the search list (by default)
+# R has separate namespaces for functions and non-functions, so its is possible
+  # to have an object named c and a function named c
+
+# Scoping Rules
+# Scoping rules determine how a value is associated with a free variable in a function
+# R uses lexical scoping or static scoping. A common alternative is dynamic scoping
+# Related to the scoping rules is how  uses the search list to bind a value to a symbol
+# Lexical scoping turns out to be particularly useful for simplifying stat computations
+
+f <- function (x, y) {
+    x ^ 2 + y / z
+}
+
+# where does free variable "z" comes from
+
+# Lexical Scoping
+
+# means that the values of free variables are searched for in the environment 
+ # in which the function was defined
+
+# What is an environment?
+    # a collection of (symbol, value) pairs, i.e. x is a symbol and 3.14 might be its value
+    # Every environment has a parent environment; it is possible for an environment to have multiple
+        #children
+    # the only environment without a parent is the empty environment
+    # a function + an environment = a closure or function closure
+
+# Searching for the value for a free variable:
+    # If you are a function and if you have a free variable. What is the value of it?
+    # If the value of a symbol is not found in the environment in which a function 
+        # was defined, then the search is continued in the parent environment
+    # The search continues down the sequence of parent environments until we hit
+        # the top level environment; this usually is the global environment (workspace)
+        # or the namespaces of a package
+    # After a top-level environment, the search continues down the searcgh list until
+        # we his the empty environment. If the value for a given symbol cannot be found
+        # once the empty environment is arrived at, then an error is thrown
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
