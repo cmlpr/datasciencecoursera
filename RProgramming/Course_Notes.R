@@ -834,6 +834,54 @@ get("y", environment(g))
     # in S-PLUS, free-variables are always looked up in the workspace
         #so everthing can be stored on the disk
 
+# Whay any of this information is useful?
+    # Optimization routines in R like optim, nlm, and optimize require you to
+        #pass a function whose argument is a vector of paramaters (a log likelihood)
+    # Howeverm an object function might depend on a host of other things
+        #besides its parameters (like data)
+    # When writing software which does optimziation, it may be desirable to
+        #allow the user to hold certain parameters fixed
+
+# Maximizing a Normal Likelihood
+
+make.NegLogLik <- function(data, fixed = c(FALSE, FALSE)) {
+    params <- fixed
+    function(p) {
+        params[!fixed] <- p
+        mu <-params[1]
+        sigma <- params[2]
+        a <- -0.5 * length(data) * log(2 * pi * sigma ^ 2)
+        b <- -0.5 * sum((data-mu) ^ 2 ) / (sigma ^ 2)
+        -(a + b) #optimization functions in R minimize functions, so you need to use negative log-likelihood
+    }
+}
+
+set.seed(1)
+normals <- rnorm(100, 1, 2)
+nLL <- make.NegLogLik(normals)
+nLL
+ls(environment(nLL))
+
+optim(c(mu = 0, sigma = 1), nLL)$par
+#Fixing sigma to 2
+nLL <- make.NegLogLik(normals, c(FALSE,2))
+optimize(nLL, c(-1, 3))$minimum
+#Fixing mu to 1
+nLL <- make.NegLogLik(normals, c(1,FALSE))
+optimize(nLL, c(1e-6, 10))$minimum
+
+nLL <- make.NegLogLike(normals, c(1, FALSE))
+x <- seq(1.7, 1.9, len = 100)
+y <- sapply(x, nLL)
+plot(x, exp(-(y - min(y))), type = "l")
+
+nLL <- make.NegLogLike(normals, c(FALSE, 2))
+x <- seq(0.5, 1.5, len = 100)
+y <- sapply(x, nLL)
+plot(x, exp(-(y - min(y))), type = "l")
+
+
+
 
 
 ####### VECTORIZED OPERATIONS #######
@@ -1147,4 +1195,172 @@ read.csv("nosuchfile")
 
 
 
+####### STR FUNCTION #######
 
+# compactly display the internal structure of an R object
+# a diagnostic function and an alternative to "summary"
+# useful in compatly displaying contents of nested lists
+# roughlt one line per basic object
+
+str(str)
+str(lm)
+str(ls)
+
+x <- rnorm(100, 2, 4)
+summary(x)
+str(x)
+
+f <- gl(40, 10) # 40 level factor , 10 repetition
+str(f)
+summary(f)
+
+library(datasets)
+head(airquality)
+str(airquality)
+
+m <- matrix(rnorm(100), 10, 10)
+str(m)
+m[, 1]
+
+s <- split(airquality, airquality$Month)
+str(s)
+
+
+
+
+####### SIMULATION #######
+
+# Functions for probablity distributions in R
+# rnorm : generates random Normal variates with a given mean and sd
+# dnorm : evaluates the Normal prob density (with a given mean/SD) at a point (or vector of points)
+# pnorm : evaulate the cumulative distribution for a Normal distribution
+# rpois : generate random Poisson variates with a given rate
+
+# d - density
+# r - random number generation
+# p - cumulative distribution
+# q - for quantile function
+
+dnorm(x, mean = 0, sd = 1, log = FALSE)
+pnorm(q, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
+qnorm(p, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
+rnorm(n, mean = 0, sd = 1)
+
+x <- rnorm(10)
+x
+x <- rnorm(10, 20, 2)
+x
+summary(x)
+
+# setting the seed to ensure reproducibility
+set.seed(1)
+rnorm(5)
+rnorm(5)
+set.seed(1)
+rnorm(5)
+
+# Poisson data
+rpois(10, 1) #10 Poisson random variables with rate 1
+rpois(10, 2)
+rpois(10, 20)
+ppois(2,2) ## cumilative distribution
+ppois(4,2) ## what is the porbability that the Poisson variable is less than
+            ## or equal to 4 when the rate is 2
+ppois(6,2)
+
+
+### GENERATE RANDOM NUMBERS FROM A LINEAR MODEL
+
+set.seed(20)
+x <- rnorm(100)
+e <- rnorm(100, 0, 2)
+y <- 0.5 + 2 * x + e
+summary(y)
+plot(x,y)
+
+
+# what if x is binary?
+
+set.seed(10)
+x <- rbinom(100, 1, 0.5)
+e <- rnorm(100, 0, 2)
+y <- 0.5 + 2 * x + e
+summary(y)
+plot(x, y)
+
+# simulate from Poisson model
+# suppose you have count values
+
+set.seed(1)
+x <- rnorm(100)
+log.mu <- 0.5 * 0.3 *x
+y <- rpois(100, exp(log.mu))
+summary(y)
+plot(x,y)
+
+# RANDOM SAMPLES
+
+set.seed(1)
+sample(1:10, 4)
+sample(1:10, 4)
+sample(letters, 5)
+sample(1:10) #permutation
+sample(1:10)
+sample(1:10, replace = TRUE) # sample with replacement
+
+
+
+
+####### PROFILING #######
+
+# Using system.time()
+# gives the time in seconds
+# time until the error in case there is an error
+# return an object of class "proc_time"
+
+
+# user time: time charged to the CPU(s) for this expression
+            # computer experiences
+# elapsed time: "wall clock time"
+            # you experience
+
+# usually user time and elapsed time are similar
+# if CPU spends a lot of time waiting, elapsed time may be greater
+# if your machine has multiple cores/processes elapsed time may be smaller
+
+# Multi-threaded BLAS libraries (vecLib/Accelerate, ATLAS, ACML, MKL)
+# Parallel processing via the parallel package
+
+## Elapsed time > user time
+system.time(readLines("http://www.jhsph.edu"))
+# waiting for the network is nor counted in CPU time
+
+## Elapsed time < user time
+hilbert <- function(n) {
+    i <- 1:n
+    1 / outer(i - 1, i, "+")
+}
+x <- hilbert(1000)
+system.time(svd(x)) #singular value decomposition
+
+
+#Rprof()
+
+summaryRProf() #function summarizes the output from RProf()
+#don't use the system.time() and Rprof() together
+
+#Rprof() keeps track the function call stack at regularly sampled intervals
+    # tabulates how much time is spend in each functin
+#Default sampling interval is 0.02 seconds
+
+lm(y ~x)
+sample.interval = 10000
+
+# summaryRprof() 
+    # 2 methods
+    # by.total > divides the time spend in each finction by the total run time
+    # by.self >  does the same but first subtracts out time spent in functions
+            # above in the call stack
+    # sample.interval
+    # sampling.time
+    # C or Fortran code is not profiled
