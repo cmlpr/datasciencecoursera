@@ -54,10 +54,10 @@ x
 # In the dataset provided for this Quiz, what are the column names of the dataset?
 dir()
 ?unzip
-unzip("quiz1_data.zip")
-dir()
-head(read.csv("hw1_data.csv"))
-data <- read.csv("hw1_data.csv")
+unzip("Data/quiz1_data.zip", exdir = "Data")
+dir("Data")
+head(read.csv("Data/hw1_data.csv"))
+data <- read.csv("Data/hw1_data.csv")
 data
 names(data)
 # [1] "Ozone"   "Solar.R" "Wind"    "Temp"    "Month"   "Day"  
