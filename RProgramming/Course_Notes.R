@@ -196,6 +196,9 @@ is.nan(x)    # True will show the location of NaN
 x <- c(1, NaN, NA, 10, 3)
 is.nan(x)
 
+x[is.na(x)] # will print all the elements that are NA
+x[!is.na(x)] # will print the elements that are not NA
+
 # Data Frame
 # To show Tabular data
 # Special type of list where each element of the list has to have the same length
@@ -225,6 +228,11 @@ x
 m <- matrix(1:4, nrow =2, ncol = 2) #matrices have dim names
 dimnames(m) <- list(c("a", "b"), c("d", "e")) #first names for the rows, then names for columns
 m
+
+my_matrix <- matrix(1:20, 4, 5)
+my_data <- data.frame(patients, my_matrix)
+cnames <- c("a", "b", "c", "d", "e")
+colnames(my_data) <- cnames
 
 ####### SUBSETTING #######
 
@@ -273,6 +281,8 @@ x <- list(foo = 1:4, bar = 0.6, baz = "hello") # 2 element list
 x
 x[c(1,3)] #if you'd like to get more than 1 element of the list, you can only use single bracket
           #result will be another list
+x[c(-1, -3)] #all elements except 1st and 3rd ones
+x[-c(1, 3)] 
 
 
 [[]] operator is useful
@@ -963,6 +973,7 @@ y-x
 
 lapply   # loops over a list and evaluates a function on each element
 sapply   # same as lapply but try to simplify the result
+vapply   # similar to sapply, you specify the format explicitly
 apply    # apply function over the margins of an array
 tapply   # apply a function over subsets of a vector
 mapply   # multivariate version of lapply
@@ -1005,7 +1016,10 @@ x
 lapply(x, mean)
 sapply(x, mean)
 
+##### vapply
 
+vapply(x, mean, numeric(1))
+vapply(x, class, character(1))
 
 ###### apply
 
@@ -1364,3 +1378,4 @@ sample.interval = 10000
     # sample.interval
     # sampling.time
     # C or Fortran code is not profiled
+
