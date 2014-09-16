@@ -424,8 +424,254 @@ with(faithful, plot(eruptions, waiting))
 dev.copy(png, file = "geyserplot.png")
 dev.off()
 
-########## P ##########
+########## LATTICE PLOTTING SYSTEM IN R ##########
+
+# Good for plotting lots of plots at once
+
+# lattice package:
+# grid package: lattice is built on top of grid
+
+# plot needs to be created at once
+# no annotations
+
+# Functions:
+    # xyplot: this is the main function for creating scatter plots
+    # bwplot: box and whisker plots
+    # histogram: histograms
+    # stripplot: like a boxplot but with actual data points
+    # dotplot: plot dots on "violin strings"
+    # splom : scatter plot matrix, like "pairs" in base plotting system
+    # levelplot, contourplot: for plotting image data
+
+# xyplot
+xplot(y ~ x | f * g, data)
+# we use the formula notation here, hence we use "~"
+# On the left of the "~" is the y axis variable, on the right is the x axis
+# f and g are conditioning variables (optional)
+    # f and g are categorical variables
+    # the "*" indicates an interaction between two variables
+# The second argument is the data frame or list from which the vraibles
+    # in the formula should be looked up
+    # if no data frame or list is passed, then the parent frame is used
+# If no other arguments are passed, there are defaults that can be used
+
+library(lattice)
+library(datasets)
+
+#scatterplot
+str(airquality)
+xyplot(Ozone ~ Wind, data = airquality)
+
+# simple lattice plot
+# convert "Month" to a factor variable
+airquality <- transform(airquality, Month = factor(Month))
+xyplot(Ozone ~ Wind | Month, data = airquality, layout = c(5,1))
+
+# Lattice behaviour
+    # Base graphics functions plot data directly to the graphics device
+    # Lattice graphics functions return an object of class trellis
+    # The print methods for lattice functions actually do the work of plotting
+        # the data on the graphics device
+    # Lattice functions return "plot objects" that can, in principle, be stored
+        # but it's usually better to just save the code + data
+    # On the command line, trellis objects are autoprinted so that it appears
+        # the function is plotting the data
 
 
-########## P ##########
+p <- xyplot(Ozone ~ Wind, data = airquality) ## Nothing happens
+print(p) ## Plot appears
+
+xyplot(Ozone ~ Wind, data = airquality) ## autoprinting
+
+# Lattice have panel functions which controls what happens inside each panel
+# The lattice package comes with default panel functions but can supply your
+    # own if you want to customize what happens in each panel
+# Panel functions receive the x-y coordinates of the data points
+    # in their panel (along with optional arguments)
+
+set.seed(10)
+x <- rnorm(100)
+f <- rep(0:1, each = 50)
+y <- x + f - f * x + rnorm(100, sd = 0.5)
+f <- factor(f, labels = c("Group 1", "Group 2"))
+xyplot(y ~ x | f,layout = c(2,1)) # plot with 2 panels
+
+## Custom panel function: add median line
+
+xyplot(y ~ x | f, panel = function(x, y, ...) {
+    panel.xyplot(x, y, ...) ## first call the default panel func for 'xyplot'
+    panel.abline(h = median(y), lty = 2) ## add a horizontal line at the median
+})
+
+xyplot(y ~ x | f, panel = function(x, y, ...) {
+    panel.xyplot(x, y, ...) ## first call the default panel func for 'xyplot'
+    panel.lmline(x, y, col = 2) ## overlay a simple linear regression line
+})
+
+
+
+########## GGPLOT2 PLOTTING SYSTEM ##########
+
+# Grammar of Graphics - Leland Wilkinson
+# Hadley Wickham - During Iowa state years
+# 3rd graphics system
+# install.packages(ggplot2)
+# http://ggplot2.org
+
+# Grammar
+    # Mapping
+    # Aesthetic
+    # Geometric
+    # Stat graphic is a mapping from data to aesthetic attributes of geometric
+        # objects
+
+# Basic function qplot() # quick plot
+    # Works much like the plot function in base plotting system
+    # Looks for data in a data frame, simlat to lattice
+    # Plots are made of aesthetics and geoms
+    # Aesthetics size shape color
+    # Geom : lines points
+    # Factor variables are important: subset of data, they should be labeled
+    # qplot() hides what goes on underneath
+    # ggplot() is the core function and very flexible things qplot() cannot do
+
+
+library(ggplot2)
+str(mpg)
+    # manufacturer, model, drv are all factor variables
+
+qplot(displ, hwy, data = mpg) # basic
+qplot(displ, hwy, data = mpg, color = drv) # modify aesthetics
+qplot(displ, hwy, data = mpg, geom = c("point", "smooth")) # add geom - smooth
+# smooth - grey band is the 95% conf interval
+
+qplot(hwy, data = mpg, fill = drv) #histogram
+
+# facets
+# facets ~ > right determine the columns, left determines the rows
+# there are no rows, so we used . 
+qplot(displ, hwy, data = mpg, facets = . ~ drv)
+# right hand side of ~ is a . > 1 column
+qplot(hwy, data = mpg, facets = drv ~., binwidth = 2)
+
+# histogram
+qplot(log(x), data = data)
+qplot(log(x), data = data, fill = y)
+
+# density smooth
+qplot(log(x), data = data, geom = "density")
+qplot(log(x), data = data, geom = "density", color = z)
+
+# scatter plot
+qplot(log(x), log(y), data = data)
+qplot(log(x), log(y), data = data, shape = y)
+qplot(log(x), log(y), data = data, color = y)
+
+# add smoothing
+qplot(log(x), log(y), data = data, color = z, geom =c("point", "smooth"), 
+                                                      method = "lm")
+
+# split into facets
+qplot(log(x), log(y), data = data, geom =c("point", "smooth"), method = "lm", 
+      facets = . ~ z)
+
+
+### Basic Components of ggplot2 Plot
+    # A data frame
+    # aesthetic mappings: how data are mapped to color and size
+    # geoms: geometric objects like points, lines, shapes
+    # facets: for conditioanl plots
+    # stats: stat transformations like binning, quantiles, smoothing
+    # scales: what scale an aesthetic map uses (ex: male = red, fem = blue)
+    # coordinate system
+
+# plots are built up in layers
+    # Data
+    # Overlay summary
+    # Metadata and annotation
+
+#qplot version
+qplot(logpm25, NocturnalSympt, data = maacs, facets = . ~ bmicat, 
+      geom =c("point", "smooth"), method = "lm")
+
+g <- ggplot(maacs, aes(logpm25, NocturnalSympt)) # initial call to ggplot
+summary(g) ## summary of ggplot object
+g <- ggplot(maacs, aes(logpm25, NocturnalSympt))
+print(g) # Error, no laers in plot
+p <- g + geom_point()
+print(p) # prints now
+
+g + geom_point() + geom_smooth() #low s moother
+g + geom_point() + geom_smooth(method = "lm") # linear model
+g + geom_point() + facet_grid(. ~ bmicat) + geom_smooth(method = "lm")
+
+# Annotation
+    #Labels: xlab, ylab, ggtitle,
+    # geom functions has options to modify
+    # global - theme()
+    # two general themes
+    # theme_grey()
+    # theme_bw()
+
+#modify aesthetics
+# assign to a constant
+g + geom_point(color = "steelblue", size = 4, aplha = 1/2)
+# assign to data variable
+g + geom_point(aes(color = bmicat), size = 4, aplha = 1/2)
+
+g + geom_point(aes(color = bmicat)) + 
+    labs(title = "xx") + 
+    labs(x = expression("log " * PM[2.5]), y = "xxx")
+
+g + geom_point(aes(color = bmicat), size = 4, aplha = 1/2) + 
+    geom_smooth(size = 4, linetype = 3, method = "lm", se = FALSE)
+
+g + geom_point(aes(color = bmicat)) + 
+    theme_bw(base_family = "Times")
+
+
+### VERY IMPORTANT
+# Notes about Axis limits
+
+testdat <- data.frame(x= 1:100, y = rnorm(100))
+testdat[50,2] <- 100 ## outlier
+plot(testdat$x, testdat$y, type = "l", ylim = c(-3,3))
+
+g<- ggplot(testdat, aes(x = x, y = y))
+g + geom_line()
+
+# this eiminates the point
+g + geom_line() + ylim(-3,3)
+# this one only changes the axis cuts
+g + geom_line() + coord_cartesian(ylim = c(-3, 3))
+
+
+# More Complex Example
+
+# cut function is very handy when creating factors
+
+# calculate the deciles of the data
+cutpoints <- quantile(maacs$logno2_new, seq(0, 1, legth = 4), na.rm = TRUE)
+# cut the data at the deciles and create a new factor variable
+maacs$no2dec <- cut(maacs$logno2_new, cutpoints)
+# see the levels of the newly created factor variable
+levels(maacs$no2dec)
+
+# setup ggplot2 with data frame
+g <- ggplot(maacs, aes(logpm25, NocturnalSympt))
+# add layers
+g + geom_point(alpha = 1/3) +
+    facet_wrap(bmicat ~ no2dec, nrow = 2, ncol = 4) +
+    geom_smooth(method = "lm", se = FALSE, col = "steelblue") +
+    theme_bw(base_family = "Avenir", base_size = 10) +
+    labs(x = expression("log " * PM[2.5])) + 
+    labs(y = "Nocturnal Symptoms") + 
+    labs(title = "MAACS Cohort")
+
+
+
+
+
+
+
 
