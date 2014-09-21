@@ -213,6 +213,8 @@ x
 nrow(x)  # to get the number of rows
 ncol(x)  # to get the number of columns
 
+object.size(x) # to see how much space it occupies
+
 # Names
 # R objects can also have names. This makes the code readable
 
@@ -968,6 +970,26 @@ y-x
 
 
 
+d1 <- Sys.Date()
+class(d1)
+unclass(d1)
+str(unclass(d1)) # better, more structured data
+
+t2 <- as.POSIXlt(Sys.time())
+t2
+class(t2)
+unclass(t2)
+str(unclass(t2))
+t2$min
+
+weekdays(t2)
+months(t2)
+quarters(t2)
+Sys.time() > t1
+Sys.time() - t1
+
+difftime(Sys.time(), t1, units = "days")
+
 
 ####### LOOP FUNCTIONS #######
 
@@ -1320,10 +1342,18 @@ sample(1:10, 4)
 sample(letters, 5)
 sample(1:10) #permutation
 sample(1:10)
-sample(1:10, replace = TRUE) # sample with replacement
+sample(1:6, 4, replace = TRUE) # sample with replacement
 
+# Now, suppose we want to simulate 100 flips of an unfair two-sided coin. 
+# This particular coin has a 0.3 probability of landing 'tails' and a 0.7 
+# probability of landing 'heads'.
+# Let the value 0 represent tails and the value 1 represent heads. Use 
+# sample() to draw a sample of size 100 from the vector c(0,1), with 
+# replacement. Since the coin is unfair, we must attach specific probabilities 
+# to the values 0 (tails) and 1 (heads) with a fourth argument, 
+# prob = c(0.3, 0.7). Assign the result to a new variable called flips.
 
-
+flips <- sample(c(0,1), 100, replace = T, prob = c(0.3,0.7))
 
 ####### PROFILING #######
 
@@ -1378,4 +1408,3 @@ sample.interval = 10000
     # sample.interval
     # sampling.time
     # C or Fortran code is not profiled
-
