@@ -1129,3 +1129,171 @@ image(t(faceData)[, nrow(faceData):1], main = "(d)") ## Original data
         # http://en.wikipedia.org/wiki/Latent_semantic_analysis
 
 
+########## Clustering Case Study ##########
+
+#EDA Case Study - Understanding Human Activity with Smart Phones
+#UCI Machine Learning Repository
+#Samsung Galaxy3 - Smartphone data
+
+setwd("/Users/cemalperozen/Documents/Repos/datasciencecoursera/ExplatoryDataAnalysis")
+dir()
+dir("Data/")
+unzip("Data/clusteringEx_data.zip", exdir = "Data/")
+dir("Data/")
+dir("Data/data")
+
+load("Data/data/samsungData.rda")
+
+names(samsungData)
+names(samsungData)[1:12]
+str(samsungData)
+samsungData[1,]
+table(samsungData$activity)
+
+# Plotting average acceleration for first subject
+par(mfrow = c(1, 2), mar = c(5, 4, 1, 1))
+samsungData <- transform(samsungData, activity = factor(activity))
+sub1 <- subset(samsungData, subject == 1)
+plot(sub1[,1], col = sub1$activity, ylab = names(sub1)[1])
+plot(sub1[,2], col = sub1$activity, ylab = names(sub1)[2])
+legend("bottomright", legend = unique(sub1$activity), col = unique(sub1$activity), 
+       pch = 1)
+
+#Cluster based just on average acceleration
+source("myplclust.R")
+distanceMatrix <- dist(sub1[, 1:3])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+
+#Plotting max acceleration for the first subject
+par(mfrow = c(1,2))
+plot(sub1[, 10], pch = 19, col = sub1$activity, ylab = names(sub1)[10])
+plot(sub1[, 11], pch = 19, col = sub1$activity, ylab = names(sub1)[11])
+
+#clustering based on maximum acceleration
+source("myplclust.R")
+distanceMatrix <- dist(sub1[, 10:12])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+
+#Simgular Value Decomposition
+svd1 = svd(scale(sub1[, -c(562, 563)])) #remove last 2 rows because they are only identifiers which is not interesting data
+par(mfrow = c(1,2))
+plot(svd1$u[,1], col = sub1$activity, pch = 19)
+plot(svd1$u[,2], col = sub1$activity, pch = 19)
+
+#Find maximum contributor
+plot(svd1$v[, 2], pch = 19)
+
+#New clustering with maximum contributor
+maxContrib <- which.max(svd1$v[,2]) #which single one of the 500 features contributors is the dominant
+distanceMatrix <- dist(sub1[, c(10:12, maxContrib)])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+
+names(samsungData)[maxContrib]
+
+#K-means clustering(nstart = 1, first try)
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6)
+table(kClust$cluster, sub1$activity)
+#K-means clustering(nstart = 1, second try)
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6, nstart = 1)
+table(kClust$cluster, sub1$activity)
+#K-means clustering(nstart = 100, first try)
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6, nstart = 100)
+table(kClust$cluster, sub1$activity)
+#K-means clustering(nstart = 100, first try)
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6, nstart = 100)
+table(kClust$cluster, sub1$activity)
+
+#Cluster 1 Variable Centers (Laying)
+plot(kClust$center[1, 1:10], pch = 19, ylab = "Cluster Center", xlab = "")
+#Cluster 2 Variable Centers (Walking)
+plot(kClust$center[4, 1:10], pch = 19, ylab = "Cluster Center", xlab = "")
+
+
+########## Air Pollution Case Study ##########
+
+# http://goo.gl/soQZHM
+# The main question is: are the emissions lower in recent years compared to earlier
+
+setwd("/Users/cemalperozen/Documents/Repos/datasciencecoursera/ExplatoryDataAnalysis")
+dir()
+dir("Data/")
+unzip("Data/pm25_data.zip", exdir = "Data/")
+dir("Data/")
+dir("Data/pm25_data")
+
+pm0 <- read.table("Data/pm25_data/RD_501_88101_1999-0.txt", 
+                  comment.char = "#",
+                  header = FALSE, 
+                  sep = "|", 
+                  na.strings = "")
+dim(pm0)
+head(pm0)
+cnames <- readLines("Data/pm25_data/RD_501_88101_1999-0.txt", 1)
+cnames
+cnames <- strsplit(cnames, "|", fixed = TRUE)
+cnames
+names(pm0) <-cnames[[1]] #strsplit returns a list and we only need the first element of the list
+head(pm0)
+names(pm0) <-make.names(cnames[[1]]) #strsplit returns a list and we only need the first element of the list
+head(pm0) #spaces are replaced with "."
+
+x0 <- pm0$Sample.Value
+class(x0)
+str(x0)
+summary(x0)
+
+mean(is.na(x0)) # 11.25% of the data is missing
+
+pm1 <- read.table("Data/pm25_data/RD_501_88101_2012-0.txt", 
+                  comment.char = "#",
+                  header = FALSE, 
+                  sep = "|", 
+                  na.strings = "")
+dim(pm1)
+head(pm1)
+names(pm1) <-make.names(cnames[[1]]) #strsplit returns a list and we only need the first element of the list
+head(pm1) #spaces are replaced with "."
+
+x1 <- pm1$Sample.Value
+class(x1)
+str(x1)
+summary(x1) #median is lower in 2012
+summary(x0) 
+
+mean(is.na(x1)) # 5.6% of the data is missing
+
+boxplot(x0,x1)
+
+boxplot(log10(x0), log10(x1))
+#average has gone down but spread of the data increased
+
+#negative values
+summary(x1)
+negative <- x1 < 0
+str(negative)
+sum(negative, na.rm = TRUE) # total sum
+mean(negative, na.rm = TRUE) # percentage of it
+dates <- pm1$Date
+str(dates)
+dates <- as.Date(as.character(dates), "%Y%m%d")
+str(dates)
+hist(dates, "month")
+hist(dates[negative], "month")
+
+#now let's go to region
+site0 <- unique(subset(pm0, State.Code == 36, c(County.Code, Site.ID)))
+site1 <- unique(subset(pm1, State.Code == 36, c(County.Code, Site.ID)))
+head(site0)
+site0 <- paste(site0[,1], site0[,2], sep = ".")
+site1 <- paste(site1[,1], site1[,2], sep = ".")
+str(site0)
+str(site1)
+both <- intersect(site0, site1)
+both
+
+
+
+
