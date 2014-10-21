@@ -323,3 +323,252 @@ system.time(read.table(file, header=TRUE, sep="\t"))
 # More info:
 # http://stackoverflow.com/questions/13618488/what-you-can-do-with-data-frame-that-you-cant-in-data-table
 # https://github.com/raphg/Biostat-578/blob/master/Advanced_data_manipulation.Rpres
+
+
+
+
+
+
+#####   Reading from MySQL   #####
+
+# Resources: 
+    # http://dev.mysql.com/doc/employee/en.sakila-structure.html
+    # RMySQL vignette: http://cran.r-project.org/web/packages/RMySQL/RMySQL.pdf
+    # List of commands: http://www.pantz.org/software/mysql/mysqlcommands.html
+    # Summary of commands: http:www.r-bloggers.com/mysq;-and-r/ 
+# Installing: http://dev.mysql.com/doc/refman/5.7/en/installing.html
+
+# MAC
+install.packages("RMySQL")
+# Windows
+# official instructions (may be useful for MAC users too): http://biostat.mc.vanderbilt.edu/wiki/Main/RMySQL 
+# potentially useful guide: http://www.ahschulz.de/2013/07/23/installing-rmysql-under-windows/
+
+#connect and create handle
+ucscDB <- dbConnect(MySQL(), user="genome", host="genome-mysql.cse.ucsc.edu") 
+# query databases - shows all the databases in the connection
+result <- dbGetQuery(ucscDB, "show databases;") 
+# disconnect from the server: wait for TRUE response
+dbDisconnect(ucscDb);
+
+#connect to specific database
+hg19 <- dbConnect(MySQL(), user="genome", db = "hg19", host="genome-mysql.cse.ucsc.edu") 
+#get tables, each table is like a data frame
+allTables <- dbListTables(hg19) 
+#number of tables
+length(allTables) 
+#first 5 tables
+allTable[1:5] 
+
+#specific table
+#specific genome's table's fields > column names
+dbListFields(hg19,"affyU133Plus2") 
+#number of rows in the table affyU133Plus2
+dbGetQuery(hg19, "select count(*) from affyU133Plus2") 
+
+# Read the table
+affyData <- dbReadTable(hg19, "affyU133Plus2")
+head(affyData)
+
+# Select a specific subset
+query <- dbSendQuery(hg19, "select * from affyU133Plus2 where misMatch between 1 and 3")
+affyMis <- fetch(query); quantile(affyMis$misMatches)
+
+#if you don't want to get all the results
+affyMisSmall <- fetch(query, n = 10); 
+#clear the query from the database - wait for the TRUE print
+dbClearResult(query); 
+dim(affyMisSmall)
+# Close the connection
+dbDisconnect(hg19);
+
+
+
+
+
+#####   Reading from HDF5   #####
+
+# Used for storing large datasets
+# Supports storing a range of data types
+# Heirarchical Data Format
+# "groups" containing zero or more data sets and metadata
+    # Have a "group header" with group name and list of attributes
+    # Have a "group symbol table" with a list of objects in group
+# "datasets" multidimensional array of data elements with metadata
+    # Have a "header" with name, datatype, dataspace, and storage layout
+    # Have a "data array" with the data
+# http://www.hdfgroup.com
+# http://www.bioconductor.org/packages/release/bioc/vignettes/rhdf5/inst/doc/rhdf5.pdf
+# http://www.hdfgroup.com/HDF5
+
+source("http://bioconductor.org/biocLite.R") #install
+biocLite("rhdf5") #install
+
+library(rhdf5)
+setwd("C:/Users/ozenca/Documents/GitHub/datasciencecoursera/GettingCleaningData")
+list.files("./Data")
+
+created = h5createFile("./Data/example.h5")
+created
+
+# Create groups withing the file
+created = h5createGroup("./Data/example.h5","foo")
+created = h5createGroup("./Data/example.h5","baa")
+# create a subgroup
+created = h5createGroup("./Data/example.h5","foo/foobaa")
+
+# list the groups
+h5ls("./Data/example.h5")
+
+A = matrix(1:10, nr=5, nc=2)
+# Write data in the group
+h5write(A, "./Data/example.h5", "foo/A")
+B = array(seq(0.1,2.0,by=0.1),dim=c(5,2,2))
+# adaa atributes
+attr(B,"scale") <- "liter"
+h5write(B, "./Data/example.h5", "foo/foobaa/N")
+h5ls("./Data/example.h5")
+
+# Write a data set
+df <- data.frame(1L:5L,seq(0,1,length.out=5), c("ab","cde","fghi","a","s"), stringsAsFactors=FALSE)
+h5write(df, "./Data/example.h5", "df")
+h5ls("./Data/example.h5")
+
+readA = h5read("./Data/example.h5","foo/A")
+readA
+readA = h5read("./Data/example.h5","foo/foobaa")
+readA
+readA = h5read("./Data/example.h5","df")
+readA
+
+# writing and reading chunks
+h5write(c(12,13,14),"./Data/example.h5","foo/A",index=list(1:3,1))
+h5read("./Data/example.h5", "foo/A")
+
+
+
+
+
+
+#####   Reading from the Web   #####
+#####   Webscraping            #####
+
+# Webscrapping: Programatically extracting data from the HTML code of websites
+# U can be a great way to get data 
+# May websites have information you may want to programatically read
+# In some cases this is against the terms of service for the website
+# Attempting to read too many pages too quickly can get your IP address blocked
+# http://en.wikipedia.org/wiki/Web_scraping
+
+# http://www.r-bloggers.com/?s=Web+Scraping
+# http://cran.r-project.org/web/packages/httr/httr.pdf
+
+# Getting data off webpages - readLines()
+con = url("http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en")
+htmlCode = readLines(con)
+close(con)
+htmlCode
+
+# Parsing with XML
+library(XML)
+url <- "http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en"
+html <- htmlTreeParse(url, useInternalNodes = T)
+xpathSApply(html, "//title", xmlValue)
+xpathSApply(html, "//td[@id='col-citedby']", xmlValue)
+
+# GET from the httr packages
+library(httr)
+html2 = GET(url)
+content2 = content(html2, as="text")
+parsedHtml = htmlParse(content2, asText=TRUE)
+xpathSApply(parsedHtml, "//title", xmlValue)
+
+# Accessing websites with passwords
+pg1 = GET("http://httpbin.org/basic-auth/user/passwd")
+pg1
+
+pg2 = GET("http://httpbin.org/basic-auth/user/passwd", authenticate("user","passwd"))
+pg2
+names(pg2)
+
+# Using handles - you can keep authentications
+google = handle("http://google.com")
+pg1 = GET(handle=google, path="/")
+pg2 = GET(handle=google, path="search")
+pg1
+pg2
+
+
+#####   Reading from APIs   #####
+
+# httr allows GET, POST, PUT, DELETE requests if you are authorized
+# You can authenticate with a user name and password
+# Most modern APIs use something like oauth
+# httr works well with Facebook, Google, Twitter , Github, etc
+
+#Twitter
+#First create an application in dev.twitter.com/apps
+#start the auth
+myapp = oauth_app("twitter", 
+                  key="uF2h52MH0wPb5Xnc7NY83d5Ob", 
+                  secret="2SZDCjxS4Z6QDsU7rZVYqox6FCUs7LwLiectZrf0VO6YY2WOFI") 
+# Sign
+sig = sign_oauth1.0(myapp, 
+                    token = "26301788-QbEJodeSWSjnUvZ441jkzOdeG1z6QrkQ9g4l67gCW", 
+                    token_secret = "0CAieEaEWrHk76LotMPFehSqs2XFlleYqqSHGKMRWc0CL")
+#api version 1.1, statuses from timeline
+homeTL = GET("https://api.twitter.com/1.1/statuses/home_timeline.json", sig) 
+
+# Convert to JSON object
+library(httr)
+library(jsonlite)
+
+json1 = content(homeTL)
+json2 = jsonlite::fromJSON(toJSON(json1))
+
+json2
+json2[1,1:4]
+json2[4,1:4]
+
+
+
+#####   Reading from Other Resources   #####
+
+file - oepn a connection to a text file
+url - open a connection to a url
+gzfile - oepn a connection to .gz file
+bzfile - open a connection to a .bz2 file
+# for more information
+?connections 
+# Remember to close connections
+
+# FOREIGN PACKAGE
+# Minitab, S, SAS, SPSS, Stata, Systat
+read.art(Weka)
+read.dta(Stata)
+read.mtp(Minitab)
+read.octave(Octave)
+read.spss(SPSS)
+read.xport(SAS)
+# http://cran.r-project.org/web/packages/foreign/foreign.pdf
+
+# RPostresSQL
+# RODBC
+# RMongo
+
+# Reading images
+jpeg
+readbitmap
+png
+EBImage #(Bioconductor)
+
+# GIS
+rdgal
+rgeos
+raster
+
+# Music data
+tuneR
+seewave
+
+
