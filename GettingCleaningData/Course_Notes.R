@@ -572,3 +572,318 @@ tuneR
 seewave
 
 
+
+
+
+
+#####   Subsetting and Sorting   #####
+
+set.seed(13435)
+X <- data.frame("var1" = sample(1:5), "var2"=sample(6:10),"var3"=sample(11:15))
+X
+X <- X[sample(1:5),];
+X
+X$var2[c(1,3)] = NA
+X
+
+# First column of the data frame
+X[,1]
+X[,"var1"]
+
+# Subset both columns and rows
+X[1:2, "var2"]
+
+#Subset using logical statements
+X[(X$var1 <=3 & X$var3 > 11),]
+X[(X$var1 <=3 | X$var3 > 15),]
+
+#Dealing with NA values
+X[which(X$var2 >8),]
+
+#Sorting
+# increasing
+sort(X$var1)
+# decreasing
+sort(X$var1, decreasing = TRUE)
+# put NAs to the last rows
+sort(X$var2, na.last = TRUE)
+
+#Order data frame
+X[order(X$var1),]
+#use multiple columns
+X[order(X$var1,X$var3),]
+
+
+# Plyr package
+library(plyr)
+# increasing
+arrange(X,var1)
+# decreasing
+arrange(X, desc(var1))
+
+# Add rows and columns
+X$var4 <- rnorm(5)
+X
+Y <- cbind(X, rnorm(5))
+Y
+
+
+
+
+
+#####   Summarizing Data   #####
+
+getwd()
+if(!file.exsts("./Data")){dir.create("./Data")}
+fileUrl <- "https://data.baltimorecity.gov/api/views/k5ry-ef3g/rows.csv?accessType=DOWNLOAD"
+download.file(fileUrl, destfile="./Data/restaurants.csv", method = "curl")
+list.files("./Data")
+restData <- read.csv("./Data/restaurants.csv")
+restData
+
+# Look at a bit of the data
+head(restData, n = 3)
+tail(restData, n = 4)
+
+# MAke summary
+# For catogory variables it will give the count
+summary(restData)
+
+# More in depth informations
+str(restData)
+
+# Quantiles of quantitative variables
+quantile(restData$councilDistrict, na.rm= TRUE)
+quantile(restData$councilDistrict, probs=c(0.5, 0.75, 0.9))
+
+# MAke table
+table(restData$zipCode, useNA="ifany")
+table(restData$councilDistrict, restData$zipCode)
+
+#Check for missing values
+sum(is.na(restData$councilDistrict))
+any(is.na(restData$councilDistrict))
+# all will check if all values satify a given condition
+all(restData$zipCode > 0)
+
+# Row and column sums
+colSums(is.na(restData))
+all(colSums(is.na(restData)) == 0)
+
+# Values with specific characteristics
+table(restData$zipCode %in% c("21212"))
+table(restData$zipCode %in% c("21212", "21213"))
+
+restData[restData$zipCode %in% c("21212", "21213"), ]
+
+# Cross tabs
+data(UCBAdmissions)
+DF = as.data.frame(UCBAdmissions)
+summary(DF)
+xt <- xtabs(Freq ~ Gender + Admit, data = DF)
+xt
+
+# Flat Tables
+warpbreaks$replicate <- rep(1:9, len = 54)
+xt <- xtabs(breaks ~., data = warpbreaks) # break it down with all the variables
+xt
+ftable(xt)
+
+# Size of data set
+fakeData = rnorm(1e5)
+object.size(fakeData)
+print(object.size(fakeData), units="Mb")
+
+
+
+
+
+
+
+#####   Creating New Variables   #####
+
+# Often the raw data won't have a value you are looking for
+# You'll need to tranform the data to get the values you would like
+# Usually you will add those values to the data frames you are working with
+# Common variables to create
+    # Missingness indicator
+    # Cutting up quntitative variables
+    # Applying transforms
+
+# Creating Sequences
+s1 <- seq(1,10, by=2)
+s1
+s2 <- seq(1,10, length = 3)
+s2
+x <- c(1,3,8,25,100)
+seq(along = x)
+
+# Subsetting variables
+restData$nearMe = restData$neighborhood %in% c("Roland Park", "Homeland")
+table(restData$nearMe)
+
+# Creating binary variables
+restData$zipWrong = ifelse(restData$zipCode < 0, TRUE, FALSE)
+table(restData$zipWrong, restData$zipCode < 0)
+
+# Creating categorical variables
+restData$zipGroups = cut(restData$zipCode, breaks=quantile(restData$zipCode))
+table(restData$zipGroups)
+table(restData$zipGroups, restData$zipCode)
+
+# Easy cutting
+install.packages("Hmisc")
+library(Hmisc)
+restData$zipGroups = cut2(restData$zipCode, g = 4)
+table(restData$zipGroups)
+
+# Creating factor variables
+restData$zcf <- factor(restData$zipCode)
+restData$zcf[1:10]
+class(restData$zcf)
+
+# Levels of factor variables
+yesno <-sample(c("yes", "no"), size = 10, replace = TRUE)
+# the first level is the lowest value
+yesnofac <- factor(yesno, levels = c("yes", "no"))
+relevel(yesnofac, ref = "yes") #change the reference
+as.numeric(yesnofac)
+
+# Cutting produces factor variables
+restData$zipGroups = cut2(restData$zipCode, g = 4)
+table(restData$zipGroups)
+class(restData$zipGroups)
+
+# Using the mutate function in plyr
+# Create a new variable and add to data frame
+library(plyr)
+restData2 <- mutate(restData, zipGroups = cut2(zipCode, g = 4))
+table(restData2$zipGroups)
+
+# Common tranforms
+abs()
+sqrt()
+ceiling()
+floor()
+round()
+signif()
+cos()
+sin()
+log()
+log2()
+log10()
+exp()
+
+
+
+
+
+
+#####   RESHAPE   #####
+
+# The goal is tidy data
+# Each variable forms a column
+# Each observation forms a row
+# Each table/file stores data about one kind of observation 
+
+# Start with reshaping
+library(reshape2)
+head(mtcars)
+
+# Melt data frames
+# 
+mtcars$carname <- rownames(mtcars)
+carMelt <- melt(mtcars, id = c("carname", "gear", "cyl"), measure.vars = c("mpg", "hp"))
+head(carMelt,3)
+tail(carMelt, 3)
+
+# Casting data frames
+cylData <- dcast(carMelt, cyl ~ variable)
+cylData
+
+cylData <- dcast(carMelt, cyl ~ variable, mean)
+cylData
+
+# Averaging Values
+head(InsectSprays)
+tapply(InsectSprays$count, InsectSprays$spray, sum)
+
+# Another way - Split - Apply - Combine
+spIns = split(InsectSprays$count, InsectSprays$spray)
+spIns
+sprCount = lapply(spIns, sum)
+sprCount
+unlist(sprCount)
+sapply(spIns, sum)
+
+# plyr package
+ddply(InsectSprays, .(spray), summarize, sum=sum(count))
+
+# Creating a new variable
+spraySums <- ddply(InsectSprays, .(spray), summarize, sum=ave(count, FUN=sum))
+dim(spraySums)
+head(spraySums)
+
+# Other functions
+acast # for casting as multidimensional arrays
+arrange # for faster reordering without using order() commands
+mutate # adding new variables
+
+# Resources 
+# http://plyr.had.co.nz/09-user/
+# http://www.slideshare.net/jeffreybreen/reshaping-data-in-r
+# http://www.r-bloggers.com/a-quick-primer-on-split-apply-combine-problems/
+
+
+
+
+#####   Merging   #####
+
+if(!file.exits("./Data")){dir.create("./Data")}
+fileUrl1 = "https://dl.dropboxusercontent.com/u/7710864/data/reviews-apr29.csv"
+fileUrl2 = "https://dl.dropboxusercontent.com/u/7710864/data/solutions-apr29.csv"
+download.file(fileUrl1, destfile = "./Data/reviews.csv", method = "curl")
+download.file(fileUrl2, destfile = "./Data/solutions.csv", method = "curl")
+
+reviews = read.csv("./Data/reviews.csv")
+solutions = read.csv("./Data/solutions.csv")
+head(reviews,2)
+head(solutions,2)
+
+# solutions_id in reviews dataset is same as the id column in solutions data
+
+# Merging data
+names(reviews)
+names(solutions)
+
+# Important parameters: x,y, by.x, by.y, all
+# By default it will try to match with all common columsn
+
+# Merge by solution id in the 1st data and id in 2nd data. Also also include non matching rows
+mergedData=merge(reviews, solutions, by.x="solution_id", by.y="id",all = TRUE)
+mergedData
+head(mergedData,20)
+
+# Default - merge all common column names
+intersect(names(solutions), names(reviews))
+mergedData2 = merge(reviews, solutions, all = TRUE)
+head(mergedData2)
+
+# Using join in the plyr package
+# faster but less full featured
+df1 = data.frame(id=sample(1:10), x = rnorm(10))
+df2 = data.frame(id=sample(1:10), y = rnorm(10))
+arrange(join(df1, df2), id)
+
+# Join all
+df1 = data.frame(id=sample(1:10), x = rnorm(10))
+df2 = data.frame(id=sample(1:10), y = rnorm(10))
+df3 = data.frame(id=sample(1:10), z = rnorm(10))
+dfList = list(df1, df2, df3)
+join_all(dfList)
+
+# resources
+# http://www.statsmethods.net/management/merging.html
+# http://plyr.had.co.nz
+# http://en.wikipedia.org/wiki/Join_(SQL)
+
