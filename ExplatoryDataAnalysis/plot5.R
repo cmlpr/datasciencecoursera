@@ -32,7 +32,7 @@ unique(SCC$EI.Sector) # EI Sector includes the source sector
 # and get a subset of the SCC data frame with the result
 # To do that we will use subset and grepl functions
 # grepl function returns logical value which in turn will be used in subset function
-mobile <- subset(SCC, grepl("mobile", EI.Sector, ignore.case=TRUE), select=c(SCC, EI.Sector))
+mobile <- subset(SCC, grepl("mobile - on-road", EI.Sector, ignore.case=TRUE), select=c(SCC, EI.Sector))
 
 # Now we have the necessary scc codes in coal data frame
 # We can merge the NEI and caol data frames by using matching column names

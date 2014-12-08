@@ -32,7 +32,7 @@ unique(SCC$EI.Sector) # EI Sector includes the source sector
 # and get a subset of the SCC data frame with the result
 # To do that we will use subset and grepl functions
 # grepl function returns logical value which in turn will be used in subset function
-mobile <- subset(SCC, grepl("mobile", EI.Sector, ignore.case=TRUE), select=c(SCC, EI.Sector))
+mobile <- subset(SCC, grepl("mobile - on-road", EI.Sector, ignore.case=TRUE), select=c(SCC, EI.Sector))
 
 # Now we have the necessary scc codes in coal data frame
 # We can merge the NEI and caol data frames by using matching column names
@@ -47,13 +47,14 @@ str(NEI5) # Let's look at the data
 install.packages("plyr")
 library(plyr)
 
+NEI5 <- NEI5[NEI5$fips == "24510" | NEI5$fips == "06037" ,] 
 # The first argument is the data frame NEI
 # The second argument is a vector of categories: I want year and fips
 # The third argument is a function: I want sum of emission data for Baltimore and LA
-data <- ddply(NEI5, c("year", "fips"), function(x) sum(x[which(x$fips == "24510" || x$fips == "06037"),4]))
+data <- ddply(NEI5, c("year", "fips"), function(x) sum(x[ ,4]))
 # Since I only calculated sums for two fips numbers, the rest of fips will 
 # have 0 for the total emission value, let's see
-head(data,20)
+head(data,250)
 # Change the column names
 colnames(data) <- c("Year", "Fips", "TotalEmission")  
 # Keep the rows that have non-zero values in Total Emission column

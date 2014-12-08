@@ -887,3 +887,534 @@ join_all(dfList)
 # http://plyr.had.co.nz
 # http://en.wikipedia.org/wiki/Join_(SQL)
 
+
+
+
+#####   Editing Text Variables   #####
+
+getwd()
+setwd("~/Documents/Repos/datasciencecoursera/GettingCleaningData/")
+getwd()
+list.files()
+if(!file.exsts("./Data")){dir.create("./Data")}
+fileUrl <- "https://data.baltimorecity.gov/api/views/dz54-2aru/rows.csv?accessType=DOWNLOAD"
+download.file(fileUrl, destfile="./Data/cameras2.csv", method = "curl")
+list.files("./Data")
+cameraData <- read.csv("./Data/cameras2.csv")
+names(cameraData)
+head(cameraData)
+
+# change from capital to lower case
+tolower(names(cameraData))
+toupper(names(cameraData))
+
+# Fixing character vectors - strsplit()
+# Split on period, since period is a reserved character, use escape
+splitNames <- strsplit(names(cameraData), "\\.")
+splitNames
+
+# Quick aside (review)- lists
+mylist <- list(letters = c("A", "b", "c"), numbers = 1:3, matrix(1:25, ncol = 5))
+head(mylist)
+mylist[1]
+mylist$letters
+mylist[[1]]
+
+# Fixing character vectors - sapply()
+# Applies a function to each element in a vector of list
+splitNames[[6]][1]
+firstElement <- function(x){x[1]}
+sapply(splitNames, firstElement)
+
+# Peer Review Data
+fileUrl1 <- "https://dl.dropboxusercontent.com/u/7710864/data/reviews-apr29.csv"
+fileUrl2 <- "https://dl.dropboxusercontent.com/u/7710864/data/solutionss-apr29.csv"
+download.file(fileUrl1, destfile = "./Data/reviews.csv", method = "curl")
+download.file(fileUrl2, destfile = "./Data/solutionss.csv", method = "curl")
+reviews <- read.csv("./Data//reviews.csv")
+solutions <- read.csv("./Data//solutions.csv")
+head(reviews,2)
+head(solutions,2)
+
+# Fixing character vectors - sub()
+# substitute
+names(reviews)
+sub("_","", names(reviews),)
+
+# Fixing char vectors - gsub()
+# substitute not the first observation but all
+testName <- "this_is_a_test"
+sub("_","",testName)
+gsub("_","",testName)
+
+# Finding values - grep(), grepl()
+# grep - finds the location of the occurances
+grep("Alameda", cameraData$intersection)
+# Instea of location, value = True will print the occurances
+grep("Alameda", cameraData$intersection, value = TRUE)
+# grepl - gives a logical vector
+table(grepl("Alameda", cameraData$intersection))
+
+cameraData2 <- cameraData[!grepl("Alameda", cameraData$intersection), ]
+cameraData2
+
+# check if a value appears
+grep("JeffStreet", cameraData$Intersection)
+length(grep("JeffStreet", cameraData$Intersection))
+
+# More useful string functions
+library(stringr)
+# Count characters
+nchar("Jeffry Leek")
+# Get a portion of the string
+substr("Jeffry Leek", 1, 7)
+# Paste 2 or more strings together
+paste("Cem", "Alper")
+# Paste without space between the strings
+past0("Cem", "Alper")
+# Remove white space before or after
+str_trim("Jeff    ")
+
+# Important points about text in data sets
+# Names of variables should be
+    # All lower case when possible
+    # Descriptive (Diagnosis vs Dx)
+    # Not dublicated
+    # Not have underscore or dots or white space
+# Variables with character values
+    # Should usually be made into factor variables (depends on application)
+    # Should be descriptive (use TRUE/FALSE instead of 0/1 and Male/Female vs 0/1 or M/F)
+
+
+
+
+
+#####   Regular Expressions   #####
+
+# Regular expressions can be thought of as a combination of literals and metachars
+# To draw an anology with natural language, think of literal text forming 
+    # the words of this language, and the metachars defining its grammer
+# Regular expressions have a rich set of metachars
+
+# Literals - Exact match
+# We need a way to express
+    # Whitespace word boundries
+    # sets of literals
+    # the beginning and end of a line
+    # alternatives ("war" or "piece") Metachars to the rescue
+
+# Metachars
+# Some metachars represents the start of a line -- Carrot
+^i think
+# End of line - $
+morning$
+
+# Character classes with []
+# We can list a set of chars we will accept at a given point in the match
+[B][b][U][u][S][s][H][h]
+# will match - BUSH, bush, bUSh....
+^[Ii] am 
+# will match I am or i am
+
+# you can match a range of letters [a-z] or [a-zA-Z] # order doesn't matter
+^[0-9][a-zA-Z]
+# will match a line which starts with a number and followed by a char from a to Z
+
+# When used at the beginning of a char class, the ^ is also a metachar and
+# indicates matching chars NOT in the indicated class
+[^?.]$
+# will match - end of line anything other than "?" or "."
+
+
+# "." is used to refer to any char
+9.11
+# will match anything like 9-11, 9:11, 9a11....
+
+# "|" is the "or" metachar. It is used to combine two expressions
+flood|fire
+# will match lines with flood, fire or both
+# you can add many or statements
+flood|earthquake|coldfire|hurricane
+
+^[Gg]ood|[Bb]ad
+# will match lines with Good or good at the beginning of the line 
+# or Bad or bad at any point in the 
+# use paranthesis to make the metachar apply on a bunch of expressions
+^([Gg]ood|[Bb]ad)
+
+# "?" indicates that the expression is optional
+[Gg]eorge( [Ww]\.)? [Bb]ush
+# will match George W. Bush, George Bush,...
+# to match a literal ".", we used escape char, back slash
+
+# "*" any number of repetition
+# "+" means "at least one of the item"
+
+(.*)
+# will match lines that has (), (aasdas), (any number of chars in parantheses)
+
+[0-9]+ (.*)[0-9]+
+#match line wich has at least one number, any number of chars and another number
+
+    
+# { and } are referred to as interval quantifiers; they let us specify
+    # the minimum and maximum number of matches of an expression
+
+[Bb]ush( +[^ ]+ +){1,5} debate
+# we are looking at lines which has Bush or bush in it and the word "debate"
+# we want space followed by chars other than a space and followed by a space
+# this means space word space could happen between 1 to 5 times
+
+# m,n means at least m but not more than n matches
+# m means exactly m matches
+# m, means at least m matches
+
+# In most implementations of regular expressions, the parantheses not only limit
+# the scope of alternatives divided by a "|", but also can be used to "remember"
+# text matched by the subexpression enclosed
+
+# We refer to the matched text with \1, \2, etc
+
+ +([a-zA-Z]+) +\1 +
+    # will match " yo yo"
+
+
+# "*" is greedy, it always matches the longest possible string that satisfies the
+# the regular expression
+^s(.*)s
+
+# the greediness of * can be turned off with ?
+^s(.*?)s$
+    
+
+    
+    
+#####   Working with Dates   #####
+
+d1 = date()
+d1
+class(d1)
+
+d2 = Sys.Date()
+d2
+class(d2)
+
+# Formatting dates
+# %d = day as number (0-31)
+# %a = abbreviated weekday 
+# %A = unabbreviated weekday
+# %m = month (00-12)
+# %b = abbreviated month
+# %B = unabbreviated month
+# %y = 2 digit year
+# %Y = four digit year
+
+format(d2, "%a %b %d")
+d2
+
+x <- c("1jan1960", "2jan1960", "3jul1960")
+z <- as.Date(x, "%d%b%Y")
+z
+z[1] - z[2]
+as.numeric(z[1]-z[2])
+
+# Converting to Julian
+weekdays(d2)
+months(d2)
+julian(d2)
+
+# LUBRIDATE
+install.packages("lubridate")
+library(lubridate)
+ymd("20140108")
+mdy("08/04/2013")
+dmy("03-04-2013")
+
+# Dealing with Times
+ymd_hms("2011-08-03 10:15:03")
+ymd_hms("2011-08-03 10:15:03", tz = "Pacific/Auckland")
+?Sys.timezone
+
+x <- dmy(c("1jan2013", "2jan2013", "3mar2013", "30jul2013"))
+wday(x[1])
+wday(x[1], label=TRUE)
+
+
+
+#####   Data resources   #####
+
+
+
+
+
+
+
+
+
+#####   Swirl   #####
+
+library(swirl)
+swirl()
+install_from_swirl("Getting and Cleaning Data")
+swirl()
+
+# Manipulating Data with dplyr #
+path2scv <- ("/Library/Frameworks/R.framework/Versions/3.1/Resources/library/swirl/Courses/Getting_and_Cleaning_Data/Manipulating_Data_with_dplyr/2014-07-08.csv")
+mydf <- read.csv(path2csv, stringsAsFactors = FALSE)
+
+dim(mydf)
+head(mydf)
+library(dplyr)
+packageVersion("dplyr")
+?tbl_df
+cran <- tbl_df(mydf)
+rm("mydf")
+cran
+?select
+select(cran, ip_id, package, country)
+select(cran, r_arch:country)
+select(cran, country:r_arch)
+cran
+select(cran, -time)
+select(cran, -(X:size))
+filter(cran, package == "swirl")
+filter(cran, r_version == "3.1.1", country == "US")
+?Comparison
+filter(cran, r_version <= "3.0.2", country == "IN")
+
+filter(cran, country == "US" | country == "IN") 
+filter(cran, size > 100500, r_os == "linux-gnu")
+filter(cran, !is.na(r_version))
+
+cran2 <- select(cran, size:ip_id)
+arrange(cran2, ip_id)
+arrange(cran2, desc(ip_id))
+arrange(cran2, package, ip_id) 
+arrange(cran2, country, desc(r_version), ip_id)
+
+cran3 <- select(cran, ip_id, package, size)
+cran3
+mutate(cran3, size_mb = size / 2^20)
+mutate(cran3, size_mb = size / 2^20, size_gb = size_mb / 2^10)
+mutate(cran3, correct_size = size + 1000)
+
+summarize(cran, avg_bytes = mean(size))
+
+
+# Grouping and Chaining with dplyr #
+?group_by
+by_package <- group_by(cran, package)
+by_package
+summarize(by_package, mean(size))
+?n
+?n_distinct
+pack_sum <- summarize(by_package,
+                      count = n(),
+                      unique = n_distinct(ip_id),
+                      countries = n_distinct(country),
+                      avg_bytes = mean(size))
+pack_sum
+quantile(pack_sum$count, probs = 0.99)
+top_counts <- filter(pack_sum, count > 679)
+top_counts
+head(top_counts, 20)
+arrange(top_counts, desc(count))
+quantile(pack_sum$unique, probs = 0.99)
+top_unique <- filter(pack_sum, unique > 465)
+top_unique
+arrange(top_unique, desc(unique))
+
+# Changing
+by_package <- group_by(cran, package)
+pack_sum <- summarize(by_package,
+                      count = n(),
+                      unique = n_distinct(ip_id),
+                      countries = n_distinct(country),
+                      avg_bytes = mean(size))
+
+# Here's the new bit, but using the same approach we've
+# been using this whole time.
+
+top_countries <- filter(pack_sum, countries > 60)
+result1 <- arrange(top_countries, desc(countries), avg_bytes)
+
+# Print the results to the console.
+print(result1)
+
+
+
+result2 <-
+    arrange(
+        filter(
+            summarize(
+                group_by(cran,
+                         package
+                ),
+                count = n(),
+                unique = n_distinct(ip_id),
+                countries = n_distinct(country),
+                avg_bytes = mean(size)
+            ),
+            countries > 60
+        ),
+        desc(countries),
+        avg_bytes
+    )
+
+print(result2)
+
+result3 <-
+    cran %>%
+    group_by(package) %>%
+    summarize(count = n(),
+              unique = n_distinct(ip_id),
+              countries = n_distinct(country),
+              avg_bytes = mean(size)
+    ) %>%
+    filter(countries > 60) %>%
+    arrange(desc(countries), avg_bytes)
+
+# Print result to console
+print(result3)
+
+cran %>%
+    select(ip_id, country, package, size) %>%
+    mutate(size_mb = size / 2^20) %>%
+    filter(size_mb <= 0.5) %>%
+    arrange(desc(size_mb))
+
+
+###########################
+# Tidying Data with tidyr #
+###########################
+
+install.packages("tidyr")
+library(tidyr)
+
+students
+?gather
+gather(students, sex, count, -grade)
+
+students2
+res <- gather(students2, sex_class, count, -grade)
+res
+
+?separate
+separate(data = res, col = sex_class, into = c("sex", "class"))
+
+students2 %>%
+    gather(sex_class, count, -grade) %>%
+    separate(sex_class , c("sex", "class")) %>%
+    print
+
+students3
+students3 %>%
+    gather(class, grade , class1:class5 , na.rm = TRUE) %>%
+    print
+
+#spread
+?spread
+students3 %>%
+    gather(class, grade, class1:class5, na.rm = TRUE) %>%
+    spread(test, grade) %>%
+    print
+
+extract_numeric("class5")
+students3 %>%
+    gather(class, grade, class1:class5, na.rm = TRUE) %>%
+    spread(test, grade) %>%
+    mutate(class, class = extract_numeric(class)) %>%
+    print
+
+students4
+student_info <- students4 %>%
+    select(id, name, sex) %>%
+    unique %>%
+    print
+gradebook <- students4 %>%
+    select(id, class, midterm, final) %>%
+    print
+
+passed
+failed
+passed <- mutate(passed, status = "passed")
+failed <- mutate(failed, status = "failed")
+?rbind_list
+rbind_list(passed, failed)
+
+sat
+sat %>%
+    select(-contains("total")) %>%
+    gather(part_sex, count, -score_range) %>%
+    separate(part_sex, c("part", "sex")) %>%
+    group_by(part, sex) %>%
+    mutate(total = sum(count),
+           prop = count/total
+    ) %>% print
+
+
+
+##################################
+# Dates and Times with lubridate #
+##################################
+
+Sys.getlocale("LC_TIME")
+library(lubridate)
+help(package = lubridate)
+this_day <- today()
+this_day
+year(this_day)
+month(this_day)
+day(this_day)
+wday(this_day)
+wday(this_day, label = TRUE)
+this_moment <- now()
+this_moment
+hour(this_moment)
+minute(this_moment)
+second(this_moment)
+
+my_date <- ymd("1989-05-17")
+my_date
+class(my_date)
+ymd("1989 May 17")
+mdy("March 12, 1975")
+dmy(25081985)
+ymd(192012)
+ymd("2012/1/2")
+ymd("1920/1/2")
+
+dt1
+ymd_hms(dt1)
+hms("03:22:14")
+
+dt2
+ymd(dt2)
+
+update(this_moment, hours = 8, minutes = 34, seconds = 55)
+this_moment
+this_moment <- update(this_moment, hours = 6, minutes = 23)
+this_moment
+
+nyc <- now("America/New_York")
+nyc
+depart <- nyc + days(2)
+depart
+
+depart <- update(depart, hours = 17, minutes = 34)
+depart
+
+arrive <- depart + hours(15) + minutes(50)
+arrive
+
+?with_tz
+arrive <- with_tz(arrive, "Asia/Hong_Kong")
+arrive
+last_time <- mdy("June 17, 2008", tz = "Singapore")
+last_time
+
+?new_interval
+how_long <- new_interval(last_time, arrive)
+as.period(how_long)
+
+stopwatch()

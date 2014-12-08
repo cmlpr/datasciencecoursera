@@ -39,4 +39,5 @@ eSumBalt # This will show the result
 # It is time to plot it to a png file
 png(file = "plot2.png", width = 480, height = 480, units = "px")
 plot(years, eSumBalt, type = "l", xlab = "Years", ylab = "Total Emission", main = "Total Emission in Baltimore")
+abline(lm(eSumBalt ~ years),pch=22, lty=2, col="red")
 dev.off() #close the device

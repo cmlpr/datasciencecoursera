@@ -58,5 +58,6 @@ colnames(data) <- c("Year", "TotalEmission")
 # It is time to plot it to a png file
 library(ggplot2) # Call ggplot2 which is a requirement
 png(file = "plot4.png", width = 480, height = 480, units = "px")
-qplot(Year, TotalEmission, data = data, main = "Emissions from Coal Comb-Rltd Src Across US")
+p <- ggplot(data, aes(Year, TotalEmission)) + geom_line()
+p + labs(title = "Emissions from Coal Comb-Rltd Src Across US")
 dev.off() #close the device

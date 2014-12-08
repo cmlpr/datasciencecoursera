@@ -39,4 +39,5 @@ eSum # This will show the result
 # It is time to plot it to a png file
 png(file = "plot1.png", width = 480, height = 480, units = "px")
 plot(years, eSum, type = "l", xlab = "Years", ylab = "Total Emission", main = "Total Emission in Years")
+abline(lm(eSum ~ years),pch=22, lty=2, col="red")
 dev.off() #close the device

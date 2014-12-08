@@ -42,5 +42,7 @@ colnames(data) <- c("Type", "Year", "TotalEmission")
 # It is time to plot it to a png file
 library(ggplot2) # Call ggplot2 which is a requirement
 png(file = "plot3.png", width = 480, height = 480, units = "px")
-qplot(Year, TotalEmission, data = data, facets = Type ~ . , colour = factor(Type), main = "Total Emissions in Baltiomore for each Type")
+p <- ggplot(data, aes(Year, TotalEmission, colour = factor(Type))) + geom_line()
+p + labs(title = "Total Emissions in Baltiomore for each Type")
+p + facet_grid(Type ~ .)
 dev.off() #close the device
